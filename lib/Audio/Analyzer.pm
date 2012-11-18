@@ -677,17 +677,17 @@ The following pieces of media were done using Audio::Analyzer:
 
 =over 4 
 
-=item http://youtube.com/watch?v=C8EOtbaMT84 
+=item http://www.youtube.com/watch?v=W8Jk8rTP5l
 
-=item http://youtube.com/watch?v=QfhRVnv0bw4
+=item http://www.youtube.com/watch?v=6yTEUBgvxs4
 
 Templatized PovRay scenes written out one file per frame then rendered
 into images individually with a make file.
 
-=item http://youtube.com/watch?v=dNGi-SZ9kGw
+=item http://www.youtube.com/watch?v=bFp2zZlFgv4
 
-Imager::Graph graphs of the output of Audio::Analyzer and the internal 
-state of a software beat detector assembled with mencoder.  
+Imager::Graph generated pngs of the output of Audio::Analyzer and the internal
+state of a software beat detector.
 
 =back
 

@@ -7,13 +7,13 @@ iterate at boundries that gurantee an audio/visual sync at an arbitrary rate.
 EXAMPLE MEDIA
 
 The following pieces of media were done using Audio::Analyzer:
-  * http://youtube.com/watch?v=C8EOtbaMT84 
-  * http://youtube.com/watch?v=QfhRVnv0bw4
+  * http://www.youtube.com/watch?v=W8Jk8rTP5lg
+  * http://www.youtube.com/watch?v=6yTEUBgvxs4
       Templatized PovRay scenes written out one file per frame then rendered
       into images individually with a make file.
-  * http://youtube.com/watch?v=dNGi-SZ9kGw
+  * http://www.youtube.com/watch?v=bFp2zZlFgv4
       Imager::Graph graphs of the output of Audio::Analyzer and the internal 
-      state of a software beat detector assembled with mencoder. 
+      state of a software beat detector.
 
 INSTALLATION
 
@@ -26,8 +26,9 @@ To install this module, run the following commands:
 
 LIMITATIONS
 
-Only accepts headerless 16 bit signed PCM but at any number of channels and at 
-any samplerate. WAV support coming soon.
+  * This is not a tool for serious work - consider it a toy.
+  * Only accepts headerless 16 bit signed PCM but at any number of channels and at
+    any samplerate. WAV support coming soon.
 
 COPYRIGHT & LICENSE
        Copyright 2007 Tyler Riddle, all rights reserved.
