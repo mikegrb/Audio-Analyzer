@@ -1,6 +1,6 @@
 package Audio::Analyzer;
 
-our $VERSION = '0.21';
+our $VERSION = '0.22';
 
 use strict;
 use warnings;
@@ -14,6 +14,7 @@ use constant DEFAULT_SAMPLE_RATE => 44100;
 use constant DEFAULT_CHANNELS => 2;
 use constant DEFAULT_BITS_PER_SAMPLE => 16;
 
+#value can be undef if fileless operation is being used
 use constant INPUT => 0;
 use constant FILE_NAME => 1;
 use constant DFT_SIZE => 2;
@@ -27,6 +28,7 @@ use constant FREQ_CACHE => 9;
 use constant SCALER => 10;
 use constant BYTES => 11;
 use constant EOF_FOUND => 12;
+use constant FILELESS_BUFFER => 13;
 
 sub new {
 	my ($class, %opts) = @_;
@@ -40,16 +42,37 @@ sub new {
 	return $self;
 }
 
+sub add_samples {
+    my ($self, @samples) = @_;
+    push(@{$self->[FILELESS_BUFFER]}, @samples);
+    return;
+}
+
+sub sample_buffer_size {
+    my ($self) = @_;
+    return scalar(@{$self->[FILELESS_BUFFER]});
+}
+
 sub next {
 	my ($self) = @_;
-	my $pcm = $self->read_pcm;
+	my @samples;
 	my $chunk;
-
-	if (! defined($pcm)) {
-		return undef;
+	
+	if (defined($self->[INPUT])) {
+        my $pcm = $self->read_pcm;
+        
+        if (! defined($pcm)) {
+            return undef;
+        }
+        
+        @samples = $self->convert_pcm($pcm);
+        
+	} else {
+	    @samples = $self->get_fileless_samples;
+	    return undef unless @samples;
 	}
 
-	my @samples = $self->convert_pcm($pcm);
+
 	my $channels = $self->split_channels(@samples);
 
 	$chunk = Audio::Analyzer::Chunk->new($self, $channels);
@@ -100,9 +123,13 @@ sub init {
 	my $scaler;
 	my $fps;
 
-	if (! defined($file = $opts{'file'})) {
-		croak "file is a required option";
-	}
+    if (exists($opts{'file'})) {
+        if (! defined($file = $opts{'file'})) {
+            croak "if the file option is given it must have a value";
+        }
+    } elsif (! defined $opts{fileless}) {
+        croak "no file was specified and fileless operation is not configured";
+    }
 
 	if (! defined($dft_size = $opts{'dft_size'})) {
 		$dft_size = DEFAULT_DFT_SIZE;
@@ -127,20 +154,26 @@ sub init {
 	$read_size = $dft_size * $channels * $bits_per_sample / 8;
 
 	if (defined($fps = $opts{'fps'})) {
+	    croak "unable to use audio/visual sync with fileless operation"
+	       unless defined $file; 
 		$seek_step = $sample_rate / $fps * $bits_per_sample / 8 * $channels;	
+	} elsif (defined $seek_step && ! defined $file) {
+        croak "unable to use seek_step with fileless operation";
 	} elsif (! defined($seek_step = $opts{'seek_step'})) {
 		$seek_step = $read_size;
 	}
 
-	if (ref($file) eq 'GLOB') {
-		$self->[INPUT] = $file;
-		$self->[FILE_NAME] = scalar($file);	
-	} else {
-		croak "could not open $file: $!" unless open(PCM, $file);
-		
-		$self->[INPUT] = \*PCM;
-		$self->[FILE_NAME] = $file;
-	}
+    if (defined($file)) {
+        if (ref($file) eq 'GLOB') {
+            $self->[INPUT] = $file;
+            $self->[FILE_NAME] = scalar($file); 
+        } else {
+            croak "could not open $file: $!" unless open(PCM, $file);
+            
+            $self->[INPUT] = \*PCM;
+            $self->[FILE_NAME] = $file;
+        }
+    }
 
 	$self->[BYTES_PER_SAMPLE] = $bits_per_sample / 8;
 	$self->[CHANNELS] = $channels;
@@ -150,6 +183,10 @@ sub init {
 	$self->[READ_SIZE] = $read_size;
 	$self->[BYTES] = 0;
 	$self->[EOF_FOUND] = 0;
+	
+	unless(defined($file)) {
+	    $self->[FILELESS_BUFFER] = [];
+	}
 
 	if (! exists($opts{scaler})) {
 		$scaler = Audio::Analyzer::ACurve->new($self);
@@ -197,6 +234,21 @@ sub convert_pcm {
 	return @samples;
 }
 
+sub get_fileless_samples {
+    my ($self) = @_;
+    my $input = $self->[INPUT];
+    my $read_size = $self->[READ_SIZE];
+    my $fileless_buffer = $self->[FILELESS_BUFFER];
+    my $samples_needed = $read_size / $self->[BYTES_PER_SAMPLE];
+    
+    if (defined $input) {
+        die "read_buffer() was called for fileless operation but there was an input file ref?";
+    }
+
+    return () unless scalar(@$fileless_buffer) >= $samples_needed;
+    return splice(@$fileless_buffer, 0, $samples_needed);
+}
+
 sub read_pcm {
 	my ($self) = @_;
 	my $input = $self->[INPUT];
@@ -207,7 +259,9 @@ sub read_pcm {
 	my $buf;
 	my $ret;
 	my $rewind;
-
+	
+	die "there was no input filehandle ref" unless defined $input;
+	
 	$ret = read($input, $buf, $read_size);
 
 	if (! defined($ret)) {
