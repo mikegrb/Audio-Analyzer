@@ -1,0 +1,36 @@
+Audio::Analyzer
+
+Audio::Analyzer is a set of classes that makes doing the Fourier Transform on
+PCM audio files extremely easy. Also includes an option to automatically 
+iterate at boundries that gurantee an audio/visual sync at an arbitrary rate.
+
+EXAMPLE MEDIA
+
+The following pieces of media were done using Audio::Analyzer:
+  * http://youtube.com/watch?v=C8EOtbaMT84 
+  * http://youtube.com/watch?v=QfhRVnv0bw4
+      Templatized PovRay scenes written out one file per frame then rendered
+      into images individually with a make file.
+  * http://youtube.com/watch?v=dNGi-SZ9kGw
+      Imager::Graph graphs of the output of Audio::Analyzer and the internal 
+      state of a software beat detector assembled with mencoder. 
+
+INSTALLATION
+
+To install this module, run the following commands:
+
+    perl Makefile.PL
+    make
+    make test
+    make install
+
+LIMITATIONS
+
+Only accepts headerless 16 bit signed PCM but at any number of channels and at 
+any samplerate. WAV support coming soon.
+
+COPYRIGHT & LICENSE
+       Copyright 2007 Tyler Riddle, all rights reserved.
+
+       This program is free software; you can redistribute it and/or modify it
+       under the same terms as Perl itself.
