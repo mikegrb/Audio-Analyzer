@@ -651,7 +651,7 @@ the samples from the PCM converted to numbers between -1 and 1.
 Return an array ref of channels; each array value is an array ref which contains
 the magnitudes from the Fast Fourier Transform. Numbers are between 0 and 1.
 
-=item $combined = $chunk->combine($channels);
+=item $combined = $chunk->combine_fft($channels);
 
 Combine together 2 or more channels of FFT output into a single array ref. The
 returned ref contains the RMS of each of the channel specific readings.
